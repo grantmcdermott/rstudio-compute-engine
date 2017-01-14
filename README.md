@@ -1,6 +1,6 @@
 # RStudio Server on Google Compute Engine
 
-This is a how-to guide for setting up a server or virtual machine (VM) with Google Compute Engine. In addition, I'll also show you how to install RStudio Server on your VM, so that you can perform your analysis in almost exactly the same user environment as you're used to, but now using the full power of cloud-based computation. Trust me, it will be awesome.
+This is a how-to guide for setting up a server or virtual machine (VM) with [Google Compute Engine](https://cloud.google.com/compute/. In addition, I'll also show you how to install RStudio Server on your VM, so that you can perform your analysis in almost exactly the same user environment as you're used to, but now using the full power of cloud-based computation. Trust me, it will be awesome.
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ Now, with that bit of background in mind, Compute Engine is part of the [Google 
 
 Two final housekeeping notes, before continuing. 
 
-First, it's possible to complete nearly all of the steps in this guide via the Compute Engine browser console. However, we'll stick with the `gcloud` command line utility (which you should have [installed](https://cloud.google.com/sdk/) already), because that will make it easier to [document our steps](http://remi-daigle.github.io/shell/) and will also save us some headaches further down the road. For example, when it comes to transferring files between your local computer and a Compute Engine instance.
+First, it's possible to complete nearly all of the steps in this guide via the [Compute Engine browser console](https://console.cloud.google.com/home/dashboard). However, we'll stick with the `gcloud` command line utility (which you should have [installed](https://cloud.google.com/sdk/) already), because that will make it easier to [document our steps](http://remi-daigle.github.io/shell/) and will also save us some headaches further down the road. For example, when it comes to transferring files between your local computer and a Compute Engine instance.
 
 Second, almost all VMs run on some variant of Linux. Since we'll only be connecting to our VM instance via the terminal, this only matters insofar as some of the commands might invoke slightly different syntax to what you'd normally use on a Mac or Windows PC. If you're brand new to Linux, then I'd recommend taking a quick look at [this website](https://linuxjourney.com/). It provides a great step-by-step overview of some of the key concepts and commands. One thing that I'll briefly mention here is that Ubuntu -- the Linux distribution that we'll be using below -- uses the `apt` package-management system. (Much like Mac OS uses Homebrew.) So when you see commands like `apt-get install PACKAGENAME`, that's just a convenient way to install and manage packages.
 
@@ -179,7 +179,7 @@ Remember to keep your VM system up to date.
 ~# apt-get upgrade
 ```
 
-## Post-installation summary
+## Post-installation summary and additional resources
 
 After the initial set-up, just follow these steps to access your VM via RStudio Server:
 
@@ -201,5 +201,9 @@ http://<external-ip-address>:8787
 ```
 5. Stop your VM:
 ```
-~$ sudo gcloud compute instances stop YOUR-VM-INSTANCE-NAME
+~$ sudo gcloud compute instances stop YOUR-VM-INSTANCE-NAME --zone us-west1-a
 ```
+
+Lastly, if you ever get stuck, then just consult the relevant documentation. There's tonnes of useful advice and extra tips for getting the most out of your VM setup.
+- Google Compute Engine documentation ([link](https://cloud.google.com/compute/docs/))
+- RStudio Server documentation ([link](https://support.rstudio.com/hc/en-us/articles/234653607-Getting-Started-with-RStudio-Server))
