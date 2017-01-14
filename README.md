@@ -13,25 +13,25 @@ First things first: What is a [virtual machine (VM)](https://en.wikipedia.org/wi
 
 All you need is a working internet connection and a web browser.
 
-Now, with that bit of background in mind, Compute Engine is part of the [Google Cloud Platform](https://cloud.google.com/) and delivers high-performance, rapidly scalable VMs. A new VM can be deployed or shut down within seconds, while exisiting VMs can easily be ramped up or down (cores added, RAM added, etc.) depending on a project's needs. In my experience, Compute Engine is at least as good as Amazon AWS -- say nothing of the other really cool products within the Cloud Platform suite -- and most individual users would be really hard-pressed to spent more than a couple of dollars a month using it. This is especially true for a researcher who just needs to crunch some large dataset or run some simulations, and can easily switch the machine off when it's not being used.
+Now, with that bit of background in mind, Compute Engine is part of the [Google Cloud Platform](https://cloud.google.com/) and delivers high-performance, rapidly scalable VMs. A new VM can be deployed or shut down within seconds, while exisiting VMs can easily be ramped up or down (cores added, RAM added, etc.) depending on a project's needs. In my experience, Compute Engine is at least as good as Amazon AWS -- say nothing of the [other really cool products](https://cloud.google.com/products/) within the Cloud Platform suite -- and most individual users would be really hard-pressed to spent more than a couple of dollars a month using it. This is especially true for a researcher who just needs to crunch some large dataset or run some simulations, and can easily switch the machine off when it's not being used.
 
 Two final housekeeping notes, before continuing. 
 
-First, it's possible to complete nearly all of the steps in this guide via the Compute Engine browser console. However, we'll stick with the `gcloud` command line utility (which you should have downloaded above), because that will make it easier to document our steps and will also save us some headaches further down the road. For example, when it comes to transferring files between your local computer and a Compute Engine instance.
+First, it's possible to complete nearly all of the steps in this guide via the Compute Engine browser console. However, we'll stick with the `gcloud` command line utility (which you should have [installed](https://cloud.google.com/sdk/) already), because that will make it easier to [document our steps](http://remi-daigle.github.io/shell/) and will also save us some headaches further down the road. For example, when it comes to transferring files between your local computer and a Compute Engine instance.
 
-Second, almost all VMs run on some variant of Linux. Since we'll only be connecting with our VM instance via the command line, this only matters in the sense that some of the command line syntax might be a little unfamiliar. However, if you're brand new to Linux, then I'd still recommend taking a quick look at [this website](https://linuxjourney.com/). It provides a great step-by-step overview of some of the key concepts and commands. One thing that I'll briefly mention here is that Ubuntu -- the Linux distribution that we'll be using below -- uses the `apt` package-management system. (Much like Mac OS uses Homebrew.) So when you see commands like `apt-get install PACKAGENAME`, that's just a convenient way to install and manage packages.
+Second, almost all VMs run on some variant of Linux. Since we'll only be connecting to our VM instance via the terminal, this only matters insofar as some of the commands might invoke slightly different syntax to what you'd normally use on a Mac or Windows PC. If you're brand new to Linux, then I'd recommend taking a quick look at [this website](https://linuxjourney.com/). It provides a great step-by-step overview of some of the key concepts and commands. One thing that I'll briefly mention here is that Ubuntu -- the Linux distribution that we'll be using below -- uses the `apt` package-management system. (Much like Mac OS uses Homebrew.) So when you see commands like `apt-get install PACKAGENAME`, that's just a convenient way to install and manage packages.
 
 Okay, introduction out of the way. Let's get up a running.
 
-## Set up
+## Setup and log-in
 
-You'll need to choose an operating system for your VM, as well as the server zone (region). To see the available options, open up terminal and enter
+You'll need to choose an operating system for your VM, as well as the server zone (region). To see the available options, first open up the terminal ([Windows](http://www.digitalcitizen.life/7-ways-launch-command-prompt-windows-7-windows-8), [Mac](https://www.techwalla.com/articles/how-to-open-terminal-on-a-macbook), [Linux](http://www.wikihow.com/Open-a-Terminal-Window-in-Ubuntu)). Then enter
 ```
 ~$ sudo gcloud compute images list
 ~$ sudo gcloud compute zones list
 ```
 
-We'll go with Ubuntu 16.04 and set our zone to the U.S. west coast. You can also choose a bunch of other options by using the appropriate flags. (More info [here](https://cloud.google.com/sdk/gcloud/reference/compute/instances/create).) I'm going to call my VM instance "rstudio" but you can obviously call it whatever you like. I'm also going to specify the type of machine that I want. In this case, I'll go with the `n1-standard-8` option (8 CPUs with 30GB RAM), but you can choose from a range of machine/memory/pricing [options](https://cloud.google.com/compute/pricing). A cool feature of Compute Engine is that it is very easy change the specs of your VM and Google will even suggest cheaper alternatives if it thinks that you aren't using your resource capabilities efficiently.
+We'll go with Ubuntu 16.04 and set our zone to the U.S. west coast. You can also choose a bunch of other options by using the appropriate flags -- see [here](https://cloud.google.com/sdk/gcloud/reference/compute/instances/create). I'm going to call my VM instance "rstudio" but you can obviously call it whatever you like. I'm also going to specify the type of machine that I want. In this case, I'll go with the `n1-standard-8` option (8 CPUs with 30GB RAM), but you can choose from a [range](https://cloud.google.com/compute/pricing) of machine/memory/pricing options. (A cool feature of Compute Engine is that it is very easy to change the specs of your VM and Google will even suggest cheaper alternatives if it thinks that you aren't using your resource capabilities efficiently over time.) In the terminal window, type:
 ```
 ~$ sudo gcloud compute instances create rstudio --image-family ubuntu-1604-lts --image-project ubuntu-os-cloud  --machine-type n1-standard-8 --zone us-west1-a
 ```
@@ -39,8 +39,8 @@ We'll go with Ubuntu 16.04 and set our zone to the U.S. west coast. You can also
 This should generate something like:
 ```
 Created [https://www.googleapis.com/compute/v1/projects/YOUR-PROJECT/zones/us-west1-a/instances/rstudio].
-NAME      ZONE        MACHINE_TYPE  PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP     STATUS
-rstudio  us-west1-a  n1-standard-8               10.138.0.2   104.198.12.239  RUNNING
+NAME      ZONE        MACHINE_TYPE  PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP      STATUS
+rstudio  us-west1-a  n1-standard-8               10.138.0.2   104.198.105.102  RUNNING
 ````
 
 Write down the External IP address, as we'll need it for running RStudio server later. (It is also possible to assign a static, external IP address to your VM instance that is more memorable. See [here](https://cloud.google.com/compute/docs/configure-instance-ip-addresses#assign_new_instance). ) On a similar note, RStudio Server will run on port 8787 of the External IP, which we need to enable via the Compute Engine firewall.
@@ -49,26 +49,16 @@ Write down the External IP address, as we'll need it for running RStudio server 
 ```
 Congrats: Set-up for your Compute Engine VM instance is complete! Easy, wasn't it?
 
-Logging in is then a simple matter of providing your VM's name and zone (if you forget to specify the zone, you'll be prompted):
+Let's start it up and then log in via SSH. This is a simple matter of providing your VM's name and zone (if you forget to specify the zone, you'll be prompted):
 
 ```
 ~$ sudo gcloud compute instances start rstudio --zone us-west1-a
 ~$ sudo gcloud compute ssh rstudio --zone us-west1-a
 ```
 
-Upon logging in for the first time, you will prompted to generate an SSH key passphrase. Needless to say, you should make a note of this for future long-ins. You should now be connected to your VM via terminal. Next, we'll configure our VM in order to run RStudio Server through a web browser.
+Upon logging in for the first time, you will prompted to generate an SSH key passphrase. Needless to say, you should make a note of this for future long-ins. You should now be connected to your VM via terminal. Next, we'll configure our VM in order to run RStudio Server through a web browser like Chrome or Firefox.
 
-## Configuring your VM to run RStudio Server
-
-### Add a user
-
-Now that you're logged into your VM, you might notice that you haven't actually signed in as a specific user. In fact, you're signed into the "rstudio" VM as root. (Fun fact: You can tell because the command line has a hashtag instead of a dollar sign.) This doesn't matter for most applications, but RStudio Server specifically requires a username/password combination. Let's create one then. For example, to create a new unix user called "elvis" enter the follow command in terminal.
-```
-~# adduser elvis
-```
-You will be prompted to specify a password for this user (and confirm various bits of information about this user which you can largely ignore).
-
-### Install *R*
+### Install *R* on your VM
 
 You can find the full set of instructions and recommendations for installing *R* on Ubuntu [here](https://cran.r-project.org/bin/linux/ubuntu/README). Or you can just follow my choices below, which covers everything that you should need.
 ```
@@ -77,7 +67,8 @@ You can find the full set of instructions and recommendations for installing *R*
 ~# apt-get update
 ~# apt-get install r-base r-base-dev
 ```
-In addition to the above, a number of important *R* packages (e.g. `curl`, which in turn is a dependency for many other packages) require external Linux libraries that must first be installed separately on your VM using the appropriate package management tool. In Ubuntu (or other Debian-based distros), run the below commands in your VM's terminal:
+In addition to the above, a number of important *R* packages (e.g. `curl`, which in turn is a dependency for many other packages) require external Linux libraries that must first be installed separately on your VM. In Ubuntu (or other Debian-based distros), run the below commands in your VM's terminal:
+
 1. For the "tidyverse" suite of packages (i.e. `install.packages("tidyverse")`:
 ```
 ~# apt-get install libcurl4-openssl-dev libssl-dev libxml2-dev
@@ -91,31 +82,45 @@ In addition to the above, a number of important *R* packages (e.g. `curl`, which
 ```
 ~# R
 ```
-However, we obviously want to use RStudio (Server). So that's what we'll do next.
+However, we obviously want to use RStudio (Server). So that's what we'll configure next. (Hit `q()` and then `n` to exit the terminal version of *R* if you opened it above.)
 
-## Install RStudio Server
+## Install and configure RStudio Server
 
-You check what the latest available version of Rstudio Server is [here](https://www.rstudio.com/products/rstudio/download-server/), but as of today (11 Jan 2016) the following is what you need:
+### Download RStudio Server on your VM
+
+You should check what the latest available version of Rstudio Server is [here](https://www.rstudio.com/products/rstudio/download-server/), but as of today (11 Jan 2016) the following is what you need:
 ```
 ~# apt-get install gdebi-core
 ~# wget https://download2.rstudio.org/rstudio-server-1.0.136-amd64.deb
 ~# gdebi rstudio-server-1.0.136-amd64.deb
 ```
 
+### Add a user
+
+Now that you're logged into your VM, you might notice that you haven't actually signed in as a specific user. In fact, you're signed into the "rstudio" VM as root. (Fun fact: You can tell because the command line has a hashtag instead of a dollar sign.) This doesn't matter for most applications, but RStudio Server specifically requires a username/password combination. So we first need to create one before continuing. For example, to create a new unix user called "elvis" enter the follow command in terminal.
+```
+~# adduser elvis
+```
+You will then be prompted to specify a password for this user (and confirm various bits of information about this user which you can largely ignore).
+
+### Navigate to your RStudio Server instance in your browser
+
 You are now ready to open up RStudio Server by navigating to the default 8787 port of your VM's External IP address. (You remember writing this down earlier, right?) If you forgot to write the IP address down, don't worry: You can find it by logging into your Google Cloud console and looking at your [VM instances](https://console.cloud.google.com/compute/instances), or by opening up a new terminal window (not the one currently running your VM) and typing
 ```
 sudo gcloud compute instances describe rstudio  --zone us-west1-a
+```
+Either way, once you have the address, open up your preferred web browser and navigate to:
+```
+http://<external-ip-address>:8787
+```
 
-```
-Either way, once you have the address, open up your preferred web browser and type in:
-```
-http://<vm-ip-address>:8787
-```
+![](./pics/rstudio-server-login.png)
+
 Log in using the unix username/password that you created earlier and you're set. (Tip: Hit F11 to go full screen in your browser. The server version of RStudio is then almost indistinguishable from the desktop version.)
 
-### Reading and writing files to and from RStudio server
+### Reading and writing files to and from RStudio Server
 
-There's a slight wrinkle in the above set-up. Namely, RStudio Server is only going to be able to look for files in our "elvis" user's home directory (i.e. `/home/elvis`.) The reason has to do with user permissions; since elvis is not a "super user", RStudio server doesn't know that (s)he is allowed to access other directories in our VM. Thankfully, there's a fairly easy workaround, involving standard Linux commands for adding user and group privileges. I won't explain these in depth here, but let's just say that we want to keep all of our analysis in a new directory called "Papers". Let's first create this directory:
+There's a slight wrinkle in the above set-up. Namely, RStudio Server is only going to be able to look for files in our user's home directory (e.g. `/home/elvis`.) The reason has to do with user permissions; since Elvis is not a "super user", RStudio server doesn't know that (s)he is allowed to access other directories in our VM. Thankfully, there's a fairly easy workaround, involving standard Linux commands for adding [user and group](https://linuxjourney.com/lesson/users-and-groups) [privileges](https://linuxjourney.com/lesson/file-permissions). I won't explain these in depth here, but let's just say that we want to keep all of our analysis in a new directory called "Papers". First create this directory:
 ```
 $ sudo mkdir Papers
 ```
@@ -131,25 +136,34 @@ $ sudo chown -R <defaultuser>:papersgrp Papers
 $ sudo chmod -R 770 Papers
 ```
 
-The next two commands are optional, but advised. Since the elvis user should only be working with files in the Papers directory, you can change his primary group to papersgrp, so that all the files (s)he creates are automatically assigned to that group:
+The next two commands are optional, but advised. Since Elvis (or whatever your username is) should only be working with files in the Papers directory, you can change his/her primary group to papersgrp, so that all the files (s)he creates are automatically assigned to that group:
 ```
 $ sudo usermod -Papers papersgrp elvis
 ```
-Finally, you can add a symbolic link to the Paper directory in elvis’s home directory, so that it is immediately visible when you (he?) log(s) into RStudio Server. (Make sure you switch to the elvis user before running this command):
+Finally, you can add a symbolic link to the Paper directory in Elvis’s home directory, so that it is immediately visible when you log into RStudio Server. (Make sure that you switch to this user before running this command):
 ```
 $ sudo usermod -Papers papersgrp elvis
 $ ln -s /home/<defaultuser>/Papers /home/elvis/Papers
 ```
 
-## Transferring files
+## Transferring and synching files between your VM and your local PC
 
-This is easily done using standing Linux commands:
+You have two main options.
+
+### 1. Manually transfer files and folders using the command line or SCP
+
+Manually transferring files or folders across systems is fairly easily done using the command line:
 
 ```
 sudo gcloud compute copy-files rstudio:/home/elvis/Papers/MyAwesomePaper/amazingresults.csv ~/local-directory/amazingresults-copy.csv --zone us-west1-a
 ```
+It's also possible to transfer files using your regular desktop file browser thanks to SCP. (On Linus and Mac OSX at least. Windows users first need to install a program call WinSCP.) See [here](https://cloud.google.com/compute/docs/instances/transfer-files).
 
-It's also possible to install Dropbox or Google Drive on your VM so that your files will automatically sync and update. I'd advise that you follow the instructions for linking to the "Papers" folder above, except that you now point towards the user's relevant Google Drive / Dropbox folder.
+### Sync with Git(Hub), Box, Dropbox, or Google Drive
+
+Ubuntu, like all Linux distros, comes with Git preinstalled. You should thus be able to sync your results across systems using Git(Hub) in the [usual fashion](http://happygitwithr.com/). I tend to use the command line for all my Git operations -- committing, pulling, pushing, etc. -- and I also had some teething problems with Rstudio Server's Git UI when I first tried it on a VM. However, I believe that these issues have been mostly resolved so let me know if that works for you.
+
+Similarly, while I haven't tried it myself, you should also be able to install Box, Dropbox or Google Drive on your VM and sync your systems in that way. I'd suggest that you follow the instructions for linking to the "Papers" folder above, except that you now point towards the user's relevant Google Drive / Dropbox folder.
 
 ## Stopping and (re)starting your VM instance
 Stopping and (re)starting your VM instance is easy, so you don't have to worry about getting billed for times when you aren't using it.
@@ -163,4 +177,29 @@ Remember to keep your VM system up to date.
 ```
 ~# gcloud components update
 ~# apt-get upgrade
+```
+
+## Post-installation summary
+
+After the initial set-up, just follow these steps to access your VM via RStudio Server:
+
+1. Start-up a VM instance.
+```
+~$ sudo gcloud compute instances start YOUR-VM-INSTANCE-NAME --zone us-west1-a
+```
+2. Log-in via SSH.
+```
+~$ sudo gcloud compute ssh YOUR-VM-INSTANCE-NAME --zone us-west1-a
+```
+3. Take note of the External IP address above, or type (in a new terminal window):
+```
+sudo gcloud compute instances describe YOUR-VM-INSTANCE-NAME  --zone us-west1-a
+```
+4. Open up a web browser and navigate to (enter your username/password as needed):
+```
+http://<external-ip-address>:8787
+```
+5. Stop your VM:
+```
+~$ sudo gcloud compute instances stop YOUR-VM-INSTANCE-NAME
 ```
