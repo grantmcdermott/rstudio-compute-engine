@@ -105,7 +105,7 @@ You will then be prompted to specify a password for this user (and confirm vario
 
 You are now ready to open up RStudio Server by navigating to the default 8787 port of your VM's External IP address. (You remember writing this down earlier, right?) If you forgot to write the IP address down, don't worry: You can find it by logging into your Google Cloud console and looking at your [VM instances](https://console.cloud.google.com/compute/instances), or by opening up a new terminal window (not the one currently running your VM) and typing
 ```
-sudo gcloud compute instances describe rstudio  --zone us-west1-a
+~$ sudo gcloud compute instances describe rstudio  --zone us-west1-a
 ```
 Either way, once you have the address, open up your preferred web browser and navigate to:
 ```
@@ -121,28 +121,28 @@ Log in using the unix username/password that you created earlier and you're set.
 
 There's a slight wrinkle in the above set-up. Namely, RStudio Server is only going to be able to look for files in our user's home directory (e.g. `/home/elvis`.) The reason has to do with user permissions; since Elvis is not a "super user", RStudio server doesn't know that (s)he is allowed to access other directories in our VM. Thankfully, there's a fairly easy workaround, involving standard Linux commands for adding [user and group](https://linuxjourney.com/lesson/users-and-groups) [privileges](https://linuxjourney.com/lesson/file-permissions). I won't explain these in depth here, but let's just say that we want to keep all of our analysis in a new directory called "Papers". First create this directory:
 ```
-$ sudo mkdir Papers
+~$ sudo mkdir Papers
 ```
 Next, create a group (I'll call it "papersgrp"), whose members should all have full read, write and execute access to files within the Papers directory. Then add both the default user (which should be root) and elvis to this group:
 ```
-$ sudo groupadd papersgrp
-$ sudo gpasswd -a <defaultuser>
-$ sudo gpasswd -a elvis
+~$ sudo groupadd papersgrp
+~$ sudo gpasswd -a <defaultuser>
+~$ sudo gpasswd -a elvis
 ```
 Next, set our default user and the other papersgrp members as owners of this directory (`chown -R`) as well as all of its children directories. Grant them all read, write and execute access (`chmod -R 770`):
 ```
-$ sudo chown -R <defaultuser>:papersgrp Papers
-$ sudo chmod -R 770 Papers
+~$ sudo chown -R <defaultuser>:papersgrp Papers
+~$ sudo chmod -R 770 Papers
 ```
 
 The next two commands are optional, but advised. Since Elvis (or whatever your username is) should only be working with files in the Papers directory, you can change his/her primary group to papersgrp, so that all the files (s)he creates are automatically assigned to that group:
 ```
-$ sudo usermod -Papers papersgrp elvis
+~$ sudo usermod -Papers papersgrp elvis
 ```
 Finally, you can add a symbolic link to the Paper directory in Elvis’s home directory, so that it is immediately visible when you log into RStudio Server. (Make sure that you switch to this user before running this command):
 ```
-$ sudo usermod -Papers papersgrp elvis
-$ ln -s /home/<defaultuser>/Papers /home/elvis/Papers
+~$ sudo usermod -Papers papersgrp elvis
+~$ ln -s /home/<defaultuser>/Papers /home/elvis/Papers
 ```
 
 ## Transferring and syncing files between your VM and your local PC
@@ -154,7 +154,7 @@ You have two main options.
 Manually transferring files or folders across systems is fairly easily done using the command line:
 
 ```
-sudo gcloud compute copy-files rstudio:/home/elvis/Papers/MyAwesomePaper/amazingresults.csv ~/local-directory/amazingresults-copy.csv --zone us-west1-a
+~$ sudo gcloud compute copy-files rstudio:/home/elvis/Papers/MyAwesomePaper/amazingresults.csv ~/local-directory/amazingresults-copy.csv --zone us-west1-a
 ```
 It's also possible to transfer files using your regular desktop file browser thanks to SCP. (On Linus and Mac OSX at least. Windows users first need to install a program call WinSCP.) See [here](https://cloud.google.com/compute/docs/instances/transfer-files).
 
