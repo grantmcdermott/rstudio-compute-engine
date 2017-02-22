@@ -29,7 +29,9 @@ You'll need to choose an operating system for your VM, as well as the server zon
 ~$ sudo gcloud compute zones list
 ```
 
-We'll go with Ubuntu 16.04 and set our zone to the U.S. west coast. You can also choose a bunch of other options by using the appropriate flags -- see [here](https://cloud.google.com/sdk/gcloud/reference/compute/instances/create). I'm going to call my VM instance "rstudio" but you can obviously call it whatever you like. I'm also going to specify the type of machine that I want. In this case, I'll go with the `n1-standard-8` option (8 CPUs with 30GB RAM), but you can choose from a [range](https://cloud.google.com/compute/pricing) of machine/memory/pricing options. (A cool feature of Compute Engine is that it is very easy to change the specs of your VM and Google will even suggest cheaper alternatives if it thinks that you aren't using your resource capabilities efficiently over time.) In the terminal window, type:
+(**Tip:** If you get an error message running the above commands, try re-running them without the "sudo" bit at the beginning. This stands for [superuser do](https://en.wikipedia.org/wiki/Sudo) and is intended to invoke special user privileges that are intended for security purposes, but may be redundant on your system. Clearly, if this applies to you, then you will need to do the same for any other commands invoking "sudo" for the rest of this tutorial.)
+
+We'll go with Ubuntu 16.04 and set our zone to the U.S. west coast. (Tip: You can set the default zone in your local client so that you don't need to specify it every time. See [here](https://cloud.google.com/compute/docs/gcloud-compute/#set_default_zone_and_region_in_your_local_client).) You can also choose a bunch of other options by using the appropriate flags -- see [here](https://cloud.google.com/sdk/gcloud/reference/compute/instances/create). I'm going to call my VM instance "rstudio" but you can obviously call it whatever you like. I'm also going to specify the type of machine that I want. In this case, I'll go with the `n1-standard-8` option (8 CPUs with 30GB RAM), but you can choose from a [range](https://cloud.google.com/compute/pricing) of machine/memory/pricing options. (A cool feature of Compute Engine is that it is very easy to change the specs of your VM and Google will even suggest cheaper alternatives if it thinks that you aren't using your resource capabilities efficiently over time.) In the terminal window, type:
 ```
 ~$ sudo gcloud compute instances create rstudio --image-family ubuntu-1604-lts --image-project ubuntu-os-cloud  --machine-type n1-standard-8 --zone us-west1-a
 ```
@@ -41,13 +43,15 @@ NAME      ZONE        MACHINE_TYPE  PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP      S
 rstudio  us-west1-a  n1-standard-8               10.138.0.2   104.198.7.157  RUNNING
 ````
 
-Write down the External IP address, as we'll need it for running RStudio Server later. (It is also possible to assign a static, external IP address to your VM instance that is more memorable. See [here](https://cloud.google.com/compute/docs/configure-instance-ip-addresses#assign_new_instance). ) On a similar note, RStudio Server will run on port 8787 of the External IP, which we need to enable via the Compute Engine firewall.
+Write down the External IP address, as we'll need it for running RStudio Server later. (Tip: This IP address is ephemeral in the sense that it is only uniquely assigned to your VM so long as it is running continuously. This shouldn't create any significant problems, but if you prefer a static (i.e. non-ephemeral) IP address that is always going to be associated with your VM instance, then this is easily done. See [here](https://cloud.google.com/compute/docs/configure-instance-ip-addresses#assign_new_instance).)
+
+On a similar note, RStudio Server will run on port 8787 of the External IP, which we need to enable via the Compute Engine firewall.
 ```
 ~$ sudo gcloud compute firewall-rules create allow-rstudio --allow=tcp:8787
 ```
-Congrats! Set-up for your Compute Engine VM instance is complete. Easy, wasn't it?
+Congratulations: Set-up for your Compute Engine VM instance is complete! Easy, wasn't it?
 
-Let's start it up and then log in via SSH. This is a simple matter of providing your VM's name and zone (if you forget to specify the zone, you'll be prompted):
+Let's start it up and then log in via SSH. This is a simple matter of providing your VM's name and zone (if you forget to specify the zone or haven't assigned a default, you'll be prompted):
 
 ```
 ~$ sudo gcloud compute instances start rstudio --zone us-west1-a
@@ -133,13 +137,13 @@ root@rstudio:~# mkdir /home/elvis/TeamProject
 Next, create a group -- call it "projectgrp" -- whose members should all have full read, write and execute access to files within the Papers directory. Then add both a default user (i.e. Elvis) and other members (i.e. Priscilla) to this group:
 ```
 root@rstudio:~# groupadd projectgrp
-root@rstudio:~# gpasswd -add elvis projectgrp
-root@rstudio:~# gpasswd -add priscilla projectgrp
+root@rstudio:~# gpasswd -a elvis projectgrp
+root@rstudio:~# gpasswd -a priscilla projectgrp
 ```
 Next, set our default user (i.e. "elvis") and the other projectgrp members as owners of this directory as well as all of its children directories (`chown -R`). Grant them all read, write and execute access (`chmod -R 770`):
 ```
-root@rstudio:~# chown -R elvis:projectgrp TeamProject
-root@rstudio:~# chmod -R 770 TeamProject
+root@rstudio:~# chown -R elvis:projectgrp /home/elvis/TeamProject
+root@rstudio:~# chmod -R 770 /home/elvis/TeamProject
 ```
 
 The next two commands are optional, but are advised if Priscilla is only going to be working on this VM through the TeamProject directory. First, you can change her primary group ID to projectgrp, so that all the files she creates are automatically assigned to that group:
@@ -164,7 +168,7 @@ Manually transferring files or folders across systems is done fairly easily usin
 ```
 ~$ sudo gcloud compute copy-files rstudio:/home/elvis/Papers/MyAwesomePaper/amazingresults.csv ~/local-directory/amazingresults-copy.csv --zone us-west1-a
 ```
-It's also possible to transfer files using your regular desktop file browser thanks to SCP. (On Linus and Mac OSX at least. Windows users first need to install a program call WinSCP.) See [here](https://cloud.google.com/compute/docs/instances/transfer-files).
+It's also possible to transfer files using your regular desktop file browser thanks to SCP. (On Linus and Mac OSX at least. Windows users first need to install a program call WinSCP.) See [here](https://cloud.google.com/compute/docs/instances/transfer-files). Note further that the SCP solution is much more efficient when you have assigned a static IP address to your VM instance -- otherwise you have to set it up each time you restart your VM instance and are assigned a new ephemeral IP address -- so I'd advise doing that [first](https://cloud.google.com/compute/docs/configure-instance-ip-addresses#assign_new_instance).
 
 ### 2. Sync with Git(Hub), Box, Dropbox, or Google Drive
 
