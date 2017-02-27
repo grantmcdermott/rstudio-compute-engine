@@ -28,7 +28,7 @@ You'll need to choose an operating system for your VM, as well as the server zon
 ~$ sudo gcloud compute images list
 ~$ sudo gcloud compute zones list
 ```
-> **Tip:** If you get an error message running the above commands, try re-running them without the "sudo" bit at the beginning. This stands for "[superuser do](https://en.wikipedia.org/wiki/Sudo)" and is intended to invoke special user privileges that are intended for security purposes, but may be redundant on your system. Clearly, if this applies to you, then you will need to do the same for any other commands invoking "sudo" for the rest of this tutorial.
+> **Tip:** If you get an error message running the above commands, try re-running them without the "sudo" bit at the beginning. This stands for "[superuser do](https://en.wikipedia.org/wiki/Sudo)", which invokes special user privileges as a security check, but may be redundant on your system. Clearly, if this applies to you, then you will need to do the same for any other commands invoking "sudo" for the rest of this tutorial.
 
 We'll go with Ubuntu 16.04 and set our zone to the U.S. west coast.
 
@@ -63,12 +63,12 @@ Let's start it up and then log in via SSH. This is a simple matter of providing 
 ~$ sudo gcloud compute ssh rstudio --zone us-west1-a
 ```
 
-Upon logging in for the first time, you will be prompted to generate an SSH key passphrase. Needless to say, you should make a note of this for future long-ins. You should now be connected to your VM via terminal, with your command line interface indicating "rstudio" as the relevant hostname. That is, you should something like the following:
+Upon logging in for the first time, you will be prompted to generate an SSH key passphrase. Needless to say, you should make a note of this for future long-ins. You should now be connected to your VM via terminal, with your command line interface indicating "rstudio" as the relevant hostname. That is, you should see something like the following:
 
 ```
 root@rstudio:~#
 ```
-> **Tip:** Don't worry if you're logged in under your normal username instead of "root" like I have here. This again is just a reflection of your OS security defaults and/or user preferences. However, it does mean that you will probably have to *add* "sudo" to the beginning of the remaining terminal commands while you are connected to your VM. In other words, reverse the earlier tweak that I suggested in this tutorial! (Another neat feature of VM's is that your whole team can work on the same operating system up in the cloud, regardless of local machine types and constraints, thus overcoming many of the interoperability hurdles that can plague scientific/programming teamwork.)
+> **Tip:** Don't worry if you're logged in under your normal username instead of "root" like I have here. Again, this is just a reflection of your OS security defaults and/or user preferences. However, it does mean that you will probably have to *add* "sudo" to the beginning of the remaining terminal commands while you are connected to your VM. (In other words, reverse the earlier tweak that I suggested in this tutorial!) On that note: Another neat feature of VM's is that your whole team can work on the *same* OS up in the cloud, regardless of local machine types and constraints. In this way, VMs can be used to overcome many of the interoperability hurdles that can plague scientific/programming teamwork.
 
 Next, we'll install *R* before moving on to RStudio Server.
 
@@ -162,7 +162,7 @@ root@rstudio:~# chown -R elvis:projectgrp /home/elvis/TeamProject
 root@rstudio:~# chmod -R 770 /home/elvis/TeamProject
 ```
 
-The next two commands are optional, but are advised if Priscilla is only going to be working on this VM through the TeamProject directory. First, you can change her primary group ID to projectgrp, so that all the files she creates are automatically assigned to that group:
+The next two commands are optional, but advised if Priscilla is only going to be working on this VM through the TeamProject directory. First, you can change her primary group ID to projectgrp, so that all the files she creates are automatically assigned to that group:
 ```
 root@rstudio:~# usermod -g projectgrp priscilla
 ```
@@ -199,9 +199,11 @@ This works well for copying files from your VM to your local computer. I can't g
 
 Ubuntu, like all Linux distros, comes with Git preinstalled. You should thus be able to sync your results across systems using Git(Hub) in the [usual fashion](http://happygitwithr.com/). I tend to use the command line for all my Git operations -- committing, pulling, pushing, etc. -- and I also had some teething problems with Rstudio Server's in-built Git UI when I first tried it on a VM. However, I believe that these issues have been mostly resolved so let me know if that works for you.
 
-Similarly, while I haven't tried it myself, you should also be able to install [Box](http://xmodulo.com/how-to-mount-box-com-cloud-storage-on-linux.html), [Dropbox](https://www.linuxbabe.com/cloud-storage/install-dropbox-ubuntu-16-04) or [Google Drive](http://www.techrepublic.com/article/how-to-mount-your-google-drive-on-linux-with-google-drive-ocamlfuse/) on your VM and sync across systems that way. (Fair warning: Remember that your VM lives on a server and doesn't have the usual graphical interface -- including installation utilities -- of a normal desktop. You'll thus need to follow command line installation instructions for these programs. Make sure you scroll down to the relevant sections of the links that I have provided above.) If you go this way, then I'd try to make sure that these folders install as a sub-directory of the user's "home" folder. If not, follow the instructions for linking to the "TeamProject" folder above, except that you now point towards the relevant Box/Dropbox/GDrive folder.
+Similarly, while I haven't tried it myself, you should also be able to install [Box](http://xmodulo.com/how-to-mount-box-com-cloud-storage-on-linux.html), [Dropbox](https://www.linuxbabe.com/cloud-storage/install-dropbox-ubuntu-16-04) or [Google Drive](http://www.techrepublic.com/article/how-to-mount-your-google-drive-on-linux-with-google-drive-ocamlfuse/) on your VM and sync across systems that way.
 
-Last, but not least, Google themselves encourage data synchronisation on Compute Engine VMs using another product within their Cloud Platform, i.e. Google Storage. This is especially for really big data files and folders, but beyond the scope of this tutorial. (If you're interested in learning more, see [here](https://cloud.google.com/solutions/filers-on-compute-engine) and [here](https://cloud.google.com/compute/docs/disks/gcs-buckets).)
+> **Tip:** Remember that your VM lives on a server and doesn't have the usual graphical interface -- including installation utilities -- of a normal desktop. You'll thus need to follow command line installation instructions for these programs. Make sure you scroll down to the relevant sections of the links that I have provided above. If you go this way, then I'd try to make sure that these folders install as a sub-directory of the user's "home" folder. If not, follow the instructions for linking to the "TeamProject" folder above, except that you now point towards the relevant Box/Dropbox/GDrive folder.
+
+Last, but not least, Google themselves encourage data synchronisation on Compute Engine VMs using another product within their Cloud Platform, i.e. [Google Storage](https://cloud.google.com/storage/). This is especially useful for really big data files and folders, but beyond the scope of this tutorial. (If you're interested in learning more, see [here](https://cloud.google.com/solutions/filers-on-compute-engine) and [here](https://cloud.google.com/compute/docs/disks/gcs-buckets).)
 
 ## Stopping and (re)starting your VM instance
 Stopping and (re)starting your VM instance is easy, so you don't have to worry about getting billed for times when you aren't using it.
@@ -219,13 +221,13 @@ root@rstudio:~# apt-get upgrade
 
 ## Summary
 
-Assuming that you have gone through the initial set-up, here's a quick **tl;dr** summary for accessing an existing VM (via RStudio Server) in the future:
+Assuming that you have gone through the initial set-up, here's the **tl;dr** summary of how to deploy an existing VM with RStudio Server:
 
 1) Start-up a VM instance.
 ```
-~$ sudo gcloud compute instances start YOUR-VM-INSTANCE-NAME --zone us-west1-a
+~$ sudo gcloud compute instances start YOUR-VM-INSTANCE-NAME
 ```
-2) Take note of the External IP address (see step 4):
+2) Take note of the External IP address if you need to (see step 4 below):
 ```
 ~$ sudo gcloud compute instances describe YOUR-VM-INSTANCE-NAME
 ```
@@ -233,7 +235,7 @@ Assuming that you have gone through the initial set-up, here's a quick **tl;dr**
 ```
 ~$ sudo gcloud compute ssh YOUR-VM-INSTANCE-NAME
 ```
-4) Open up a web browser and navigate to your RStudio Server address (enter your username/password as needed):
+4) Open up a web browser and navigate to RStudio Server via your VM's External IP address (enter your username/password as needed):
 ```
 http://<external-ip-address>:8787
 ```
@@ -248,3 +250,4 @@ And, remember, if you really want to avoid the command line, then you can always
 As a final word, just remember to consult the official documentation if you ever get stuck. There's tonnes of useful advice and extra tips for getting the most out of your VM setup, including ways to integrate your system with other products within the Google Cloud platform like BigQuery, Storage, etc. etc.
 - Google Compute Engine documentation ([link](https://cloud.google.com/compute/docs/))
 - RStudio Server documentation ([link](https://support.rstudio.com/hc/en-us/articles/234653607-Getting-Started-with-RStudio-Server))
+- Linux Journey guide ([link](https://linuxjourney.com/))
