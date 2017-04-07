@@ -11,7 +11,7 @@ This is a how-to guide for setting up a server or virtual machine (VM) with [Goo
 
 ## Introduction
 
-First things first: What is a [virtual machine (VM)](https://en.wikipedia.org/wiki/Virtual_machine) and why do I need one anyway? In the simplest sense, a VM is just an emulation of a computer running inside another (bigger) computer. It can potentially perform all or more of the operations that your physical laptop/desktop does, and it might have many of the same properties (from operating system to internal architecture.) The key advantage of a VM from our perspective is that very powerful machines can be "spun up" in the cloud almost effortlessly and then deployed to tackle jobs that are beyond the capabilities of your local computer. Got a big dataset that requires too much memory to analyse on your old laptop? Load it into a high-powered VM. Got some code that takes an age to run? Fire up a VM and let it chug away without consuming any local resources. Or, better yet, write the code in parallel and then spin up a VM with lots of cores (CPUs) to get the analysis done in a fraction of the time. All you need is a working internet connection and a web browser.
+So what is a [virtual machine (VM)](https://en.wikipedia.org/wiki/Virtual_machine) and why do I need one anyway? In the simplest sense, a VM is just an emulation of a computer running inside another (bigger) computer. It can potentially perform all or more of the operations that your physical laptop/desktop does, and it might have many of the same properties (from operating system to internal architecture.) The key advantage of a VM from our perspective is that very powerful machines can be "spun up" in the cloud almost effortlessly and then deployed to tackle jobs that are beyond the capabilities of your local computer. Got a big dataset that requires too much memory to analyse on your old laptop? Load it into a high-powered VM. Got some code that takes an age to run? Fire up a VM and let it chug away without consuming any local resources. Or, better yet, write the code in parallel and then spin up a VM with lots of cores (CPUs) to get the analysis done in a fraction of the time. All you need is a working internet connection and a web browser.
 
 Now, with that bit of background in mind, Google Compute Engine is part of the [Google Cloud Platform](https://cloud.google.com/) and delivers high-performance, rapidly scalable VMs. A new VM can be deployed or shut down within seconds, while existing VMs can easily be ramped up or down (cores added, RAM added, etc.) depending on a project's needs. In my experience, Google Compute Engine is at least as good as [Amazon's AWS](https://aws.amazon.com/) -- say nothing of the [other really cool products](https://cloud.google.com/products/) within the Cloud Platform suite -- and most individual users would be really hard-pressed to spent more than a couple of dollars a month using it. (If that.) This is especially true for the researcher who only needs to crunch a particularly large dataset or run some intensive simulations on occasion, and can easily switch the machine off when it's not being used.
 
@@ -38,7 +38,7 @@ We'll go with Ubuntu 16.04 and set our zone to the U.S. west coast.
 
 > **Tip:** You can set the default zone in your local client so that you don't need to specify it every time. See [here](https://cloud.google.com/compute/docs/gcloud-compute/#set_default_zone_and_region_in_your_local_client).
 
-You can also choose a bunch of other options by using the appropriate flags -- see [here](https://cloud.google.com/sdk/gcloud/reference/compute/instances/create). I'm going to call my VM instance "rstudio" but you can obviously call it whatever you like. I'm also going to specify the type of machine that I want. In this case, I'll go with the `n1-standard-8` option (8 CPUs with 30GB RAM), but you can choose from a [range](https://cloud.google.com/compute/pricing) of machine/memory/pricing options. (Assuming a monthly usage rate of 20 hours, this VM will only [cost about[(https://cloud.google.com/products/calculator/#id=efc1f1b1-175d-4860-ad99-9006ea39651b)] $7.60 a month to maintain once our 60-day free trial ends. I should add further that is very easy to change the specs of your VM and Google will even suggest cheaper alternatives if it thinks that you aren't using your resource capabilities efficiently over time.) In the terminal window, type:
+You can also choose a bunch of other options by using the appropriate flags -- see [here](https://cloud.google.com/sdk/gcloud/reference/compute/instances/create). I'm going to call my VM instance "rstudio" but you can obviously call it whatever you like. I'm also going to specify the type of machine that I want. In this case, I'll go with the `n1-standard-8` option (8 CPUs with 30GB RAM), but you can choose from a [range](https://cloud.google.com/compute/pricing) of machine/memory/pricing options. (Assuming a monthly usage rate of 20 hours, this VM will only [cost about](https://cloud.google.com/products/calculator/#id=efc1f1b1-175d-4860-ad99-9006ea39651b) $7.60 a month to maintain once our 60-day free trial ends. I should add further that is very easy to change the specs of your VM and Google will even suggest cheaper alternatives if it thinks that you aren't using your resource capabilities efficiently over time.) In the terminal window, type:
 ```
 ~$ sudo gcloud compute instances create rstudio --image-family ubuntu-1604-lts --image-project ubuntu-os-cloud  --machine-type n1-standard-8 --zone us-west1-a
 ```
@@ -144,13 +144,15 @@ And we're all set. Here is RStudio Server running on my laptop via Google Chrome
 ![](./pics/rstudio-server-open.png)
 
 ## Stopping and (re)starting your VM instance
-Stopping and (re)starting your VM instance is easy, so you don't have to worry about getting billed for times when you aren't using it. In a new terminal (not the one currently synced to your VM instance):
+Stopping and (re)starting your VM instance is very simple, so you don't have to worry about getting billed for times when you aren't using it. In a new terminal (not the one currently synced to your VM instance):
 ```
 ~$ sudo gcloud compute instances stop rstudio
 ~$ sudo gcloud compute instances start rstudio
 ```
 
-## Troubleshooting: Getting the most out of your Compute Engine + RStudio Server setup
+Again: Easy!
+
+## Bonus: Getting the most out of your Compute Engine + RStudio Server setup
 
 Once you've completed the installation steps above, your VM will be ready to go with RStudio Server whenever you want it. However, there are several additional things that you can do to really improve the user experience and reduce complications when interacting with your VM from your local computer. Here are my primary tips and recommendations:
 
