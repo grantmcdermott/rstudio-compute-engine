@@ -1,19 +1,21 @@
 # RStudio Server on Google Compute Engine
 
-This is a how-to guide for setting up a server or virtual machine (VM) with [Google Compute Engine](https://cloud.google.com/compute/). In addition, I'll also show you how to install [RStudio Server](https://www.rstudio.com/products/rstudio/download-server/) on your VM, so that you can perform your analysis in almost exactly the same user environment as you're used to, but now using the full power of cloud-based computation. Trust me, it will be awesome.
+This is a how-to guide for setting up a server or virtual machine (VM) with [Google Compute Engine](https://cloud.google.com/compute/). In addition, I'll also show you how to install [RStudio Server](https://www.rstudio.com/products/rstudio/download-server/) on your VM, so that you can perform your analysis in almost exactly the same user environment as you're used to, but now with the full power of cloud-based computation at your disposal. Trust me, it will be awesome.
 
 ## Prerequisites (read carefully)
 
-1. Sign up for a [60-day free trial](https://console.cloud.google.com/freetrial) with the Google Cloud Platform. This requires an existing Google/Gmail acount, although UCSB employees can just use their university email address, since that is run through Gmail. During the course of sign-up, you should [create a project](https://cloud.google.com/resource-manager/docs/creating-managing-projects) that will be associated with billing. While this is purely ceremonial at present -- we're using the free trial period after all -- a billable project ID is required before gaining access to the platform.
+1. Sign up for a [60-day free trial](https://console.cloud.google.com/freetrial) with the Google Cloud Platform. This requires an existing Google/Gmail acount. During the course of sign-up, you should [create a project](https://cloud.google.com/resource-manager/docs/creating-managing-projects) that will be associated with billing. This is purely ceremonial at present -- we're using the free trial period after all -- but a billable project ID is required before gaining access to the platform.
 2. Download and follow the installation instructions for the Google Cloud SDK command line utility, `gcloud` [here](https://cloud.google.com/sdk/).
 
-> **Tip:** Please take proper note of the Google/Gmail account that you are using when signing up for the Google Cloud Platform in Step 1. (E.g. You might have two accounts, where one is your personal Gmail and the other is linked to your UCSB profile.) Needless to say, you'll want to make sure that you are consistent when setting up the gloud utility in Step 2. Failing to use the same Google account across these steps will simply lead to a bunch of puzzling authentication errors.
+> **Tip:** Please pay proper attention to the Google/Gmail account that you use to sign up for the Cloud Platform in Step 1. (E.g. You might have two Gmail accounts, where one is your personal Gmail and the other is linked to your university email.) Needless to say, you'll want to make sure that you use the *same* account when setting up the gloud utility in Step 2. This might all sound obvious, but it has been the primary sticking point during class tutorials, where people encounter a bunch of puzzling authentication errors simply because they aren't using a consistent account.
 
 ## Introduction
 
 So what is a [virtual machine (VM)](https://en.wikipedia.org/wiki/Virtual_machine) and why do I need one anyway? In the simplest sense, a VM is just an emulation of a computer running inside another (bigger) computer. It can potentially perform all or more of the operations that your physical laptop/desktop does, and it might have many of the same properties (from operating system to internal architecture.) The key advantage of a VM from our perspective is that very powerful machines can be "spun up" in the cloud almost effortlessly and then deployed to tackle jobs that are beyond the capabilities of your local computer. Got a big dataset that requires too much memory to analyse on your old laptop? Load it into a high-powered VM. Got some code that takes an age to run? Fire up a VM and let it chug away without consuming any local resources. Or, better yet, write the code in parallel and then spin up a VM with lots of cores (CPUs) to get the analysis done in a fraction of the time. All you need is a working internet connection and a web browser.
 
-Now, with that bit of background in mind, Google Compute Engine is part of the [Google Cloud Platform](https://cloud.google.com/) and delivers high-performance, rapidly scalable VMs. A new VM can be deployed or shut down within seconds, while existing VMs can easily be ramped up or down (cores added, RAM added, etc.) depending on a project's needs. In my experience, Google Compute Engine is at least as good as [Amazon's AWS](https://aws.amazon.com/) -- say nothing of the [other really cool products](https://cloud.google.com/products/) within the Cloud Platform suite -- and most individual users would be really hard-pressed to spent more than a couple of dollars a month using it. (If that.) This is especially true for the researcher who only needs to crunch a particularly large dataset or run some intensive simulations on occasion, and can easily switch the machine off when it's not being used.
+Another neat feature of VM's is that everyone within a team or research group can work on the *same* OS up in the cloud, regardless of their local machine types and constraints. Anyone who's ever encountered a situation where code works perfectly on their Linux/Mac/Windows machine, but fails to run on a colleague's Windows/Mac/Linux machine, will be acutely aware of what I'm talking about. In this way, VMs can be used to overcome many of the interoperability hurdles that can plague scientific/programming teamwork. 
+
+Now, with that background knowledge in mind, Google Compute Engine is part of the [Google Cloud Platform](https://cloud.google.com/) and delivers high-performance, rapidly scalable VMs. A new VM can be deployed or shut down within seconds, while existing VMs can easily be ramped up or down (cores added, RAM added, etc.) depending on a project's needs. In my experience, Google Compute Engine is at least as good as [Amazon's AWS](https://aws.amazon.com/) -- say nothing of the [other really cool products](https://cloud.google.com/products/) within the Cloud Platform suite -- and most individual users would be really hard-pressed to spent more than a couple of dollars a month using it. (If that.) This is especially true for the researcher who only needs to crunch a particularly large dataset or run some intensive simulations on occasion, and can easily switch the machine off when it's not being used.
 
 > **Tip:** While I very much stand by the above paragraph, it is ultimately *your* responsibility to keep track of your billing and utilisation rates. Take a look at [Google's Could Platform Pricing Calculator](https://cloud.google.com/products/calculator/) to see how much you can expect to be charged for a particular machine and level of usage. You can even [set a budget and create usage alerts](https://support.google.com/cloud/answer/6293540?hl=en) if you want to be extra cautious.
 
@@ -21,7 +23,7 @@ Two final housekeeping notes, before continuing.
 
 First, it's possible to complete nearly all of the steps in this guide via the [Compute Engine browser console](https://console.cloud.google.com/compute/instances). However, we'll stick with the `gcloud` command line utility (which you should have [installed](https://cloud.google.com/sdk/) already), because that will make it easier to [document our steps](http://remi-daigle.github.io/shell/) and will also save us some headaches further down the road. For example, when it comes to transferring files between your local computer and a Compute Engine instance *en masse*.
 
-Second, almost all VMs run on some variant of Linux. Since we'll only be connecting to our VM instance via the terminal, this only matters insofar as some of the commands might invoke slightly different syntax to what you'd normally use on a Mac or Windows PC. If you're brand new to Linux, then I'd recommend taking a quick look at [this website](https://linuxjourney.com/). It provides a great step-by-step overview of some of the key concepts and commands. One thing that I'll briefly mention here is that Ubuntu -- the Linux distribution that we'll be using below -- uses the `apt` package-management system. (Much like Mac OS uses Homebrew.) So when you see commands like `apt-get install PACKAGENAME`, that's just a convenient way to install and manage packages.
+Second, almost all VMs run on some variant of Linux. Since we'll only be connecting to our VM instance via the terminal, this only matters insofar as some of the commands might invoke slightly different syntax to what you'd normally use on a Mac or Windows PC. If you're brand new to Linux, then I'd recommend taking a quick look at [this website](https://linuxjourney.com/). It provides a great step-by-step overview of some of the key concepts and commands. One thing that I'll briefly mention here is that Ubuntu -- the Linux distribution that we'll be using below -- uses the `apt` package-management system. (Much like macOS uses [Homebrew](https://brew.sh/).) So when you see commands like `apt install PACKAGENAME`, that's just a convenient way to install and manage packages.
 
 Okay, introduction out of the way. Let's get up a running.
 
@@ -38,7 +40,7 @@ We'll go with Ubuntu 16.04 and set our zone to the U.S. west coast.
 
 > **Tip:** You can set the default zone in your local client so that you don't need to specify it every time. See [here](https://cloud.google.com/compute/docs/gcloud-compute/#set_default_zone_and_region_in_your_local_client).
 
-You can also choose a bunch of other options by using the appropriate flags -- see [here](https://cloud.google.com/sdk/gcloud/reference/compute/instances/create). I'm going to call my VM instance "rstudio" but you can obviously call it whatever you like. I'm also going to specify the type of machine that I want. In this case, I'll go with the `n1-standard-8` option (8 CPUs with 30GB RAM), but you can choose from a [range](https://cloud.google.com/compute/pricing) of machine/memory/pricing options. (Assuming a monthly usage rate of 20 hours, this VM will only [cost about](https://cloud.google.com/products/calculator/#id=efc1f1b1-175d-4860-ad99-9006ea39651b) $7.60 a month to maintain once our 60-day free trial ends. I should add further that is very easy to change the specs of your VM and Google will even suggest cheaper alternatives if it thinks that you aren't using your resource capabilities efficiently over time.) In the terminal window, type:
+You can also choose a bunch of other options by using the appropriate flags -- see [here](https://cloud.google.com/sdk/gcloud/reference/compute/instances/create). I'm going to call my VM instance "rstudio" but you can obviously call it whatever you like. I'm also going to specify the type of machine that I want. In this case, I'll go with the `n1-standard-8` option (8 CPUs with 30GB RAM), but you can choose from a [range](https://cloud.google.com/compute/pricing) of machine/memory/pricing options. (Assuming a monthly usage rate of 20 hours, this VM will only [cost about](https://cloud.google.com/products/calculator/#id=efc1f1b1-175d-4860-ad99-9006ea39651b) $7.60 a month to maintain once our 60-day free trial ends. Regardless, you needn't worry too much about these initial specs now: It's very easy to change the specs of your VM down the line and Google will even suggest cheaper alternatives if it thinks that you aren't using your resource capabilities efficiently over time.) In the terminal window, type:
 ```
 ~$ sudo gcloud compute instances create rstudio --image-family ubuntu-1604-lts --image-project ubuntu-os-cloud  --machine-type n1-standard-8 --zone us-west1-a
 ```
@@ -60,21 +62,25 @@ On a similar note, RStudio Server will run on port 8787 of the External IP, whic
 ```
 Congratulations: Set-up for your Compute Engine VM instance is complete! Easy, wasn't it?
 
-Let's start it up and then log in via SSH. This is a simple matter of providing your VM's name and zone (if you forget to specify the zone or haven't assigned a default, you'll be prompted):
+Not only have you successfully created your VM, but it should now be running on the Compute Engine cloud in the background. If not, see [here](#stopping-and-restarting-your-vm-instance) for instructions on how to start it up.
+
+The next step is to log in via [SSH](https://en.wikipedia.org/wiki/Secure_Shell). This is a simple matter of providing your VM's name and zone (if you forget to specify the zone or haven't assigned a default, you'll be prompted):
 
 ```
-~$ sudo gcloud compute instances start rstudio --zone us-west1-a
 ~$ sudo gcloud compute ssh rstudio --zone us-west1-a
 ```
+> **Tip:** When trying to SSH into your VM, you may get a message to effect of `Error: Please login as the user "ubuntu" rather than the user "root".` If this happens, simply amend your command as follows: `~$ sudo gcloud compute ssh ubuntu@rstudio --zone us-west1-a`
 
-Upon logging in for the first time, you will be prompted to generate an SSH key passphrase. Needless to say, you should make a note of this for future long-ins. You should now be connected to your VM via terminal, with your command line interface indicating "rstudio" as the relevant hostname. That is, you should see something like the following:
+Upon logging into a Compute Engine project via SSH for the first time, you will be prompted to generate a key passphrase. Needless to say, you should **make a note of this passphrase** for future long-ins. Your passphrase will be required for all future remote log-ins to Google Cloud projects via `gcloud` and SSH from your local computer. This includes additional VMs that you create under the same project account.
+
+Passphrase successfully created and entered, you should now be connected to your VM via terminal. That is, you should see something like the following, where "root" is your username and "rstudio" is the server hostname (i.e. your VM):
 
 ```
 root@rstudio:~#
 ```
-> **Tip:** Don't worry if you're logged in under your normal username instead of "root" like I have here. Again, this is just a reflection of your OS security defaults and/or user preferences. However, it does mean that you will probably have to *add* "sudo" to the beginning of the remaining terminal commands while you are connected to your VM. (In other words, reverse the earlier tweak that I suggested in this tutorial!) On that note: Another neat feature of VM's is that your whole team can work on the *same* OS up in the cloud, regardless of local machine types and constraints. In this way, VMs can be used to overcome many of the interoperability hurdles that can plague scientific/programming teamwork.
+> **Tip:** Don't worry if you're logged in under a different username instead of "root" like I have here. Again, this is just a reflection of your OS security defaults and/or user preferences. However, it does mean that you will probably have to *add* "sudo" to the beginning of the remaining terminal commands while you are connected to your VM. In other words, reverse the earlier tweak that I suggested in this tutorial!
 
-Next, we'll install *R* before moving on to RStudio Server.
+Next, we'll install *R*.
 
 ### Install *R* on your VM
 
@@ -82,8 +88,8 @@ You can find the full set of instructions and recommendations for installing *R*
 ```
 root@rstudio:~# sh -c 'echo "deb https://cloud.r-project.org/bin/linux/ubuntu xenial/" >> /etc/apt/sources.list'
 root@rstudio:~# apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
-root@rstudio:~# apt-get update
-root@rstudio:~# apt-get install r-base r-base-dev
+root@rstudio:~# apt update
+root@rstudio:~# apt install r-base r-base-dev
 ```
 > **Tip:** Again, if you have trouble running any of the above commands -- particularly if your username isn't "root" -- then you should try to add "sudo" to the beginning of each line. Continue doing this for the remaining commands below as needed.
 
@@ -91,11 +97,13 @@ In addition to the above, a number of important *R* packages require external Li
 
 1) For the "tidyverse" suite of packages (i.e. `install.packages("tidyverse")`:
 ```
-root@rstudio:~# apt-get install libcurl4-openssl-dev libssl-dev libxml2-dev
+root@rstudio:~# apt install libcurl4-openssl-dev libssl-dev libxml2-dev
 ```
-2) For the main spatial libraries (sp, rgeos, etc.):
+2) For the main spatial libraries (sp, rgeos, sf, etc.):
 ```
-root@rstudio:~# apt-get install libgeos-dev libproj-dev libgdal-dev
+root@rstudio:~# add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
+root@rstudio:~# apt update && apt upgrade
+root@rstudio:~# apt install libgeos-dev libproj-dev libgdal-dev
 ```
 
 *R* is now ready to go your on VM directly from terminal:
@@ -110,7 +118,7 @@ However, we'd obviously prefer to use the awesome IDE interface provided by RStu
 
 You should check what the latest available version of Rstudio Server is [here](https://www.rstudio.com/products/rstudio/download-server/), but as of today (11 Jan 2016) the following is what you need:
 ```
-root@rstudio:~# apt-get install gdebi-core
+root@rstudio:~# apt install gdebi-core
 root@rstudio:~# wget https://download2.rstudio.org/rstudio-server-1.0.136-amd64.deb
 root@rstudio:~# gdebi rstudio-server-1.0.136-amd64.deb
 ```
@@ -122,6 +130,8 @@ Now that you're logged into your VM, you might notice that you haven't actually 
 root@rstudio:~# adduser elvis
 ```
 You will then be prompted to specify a password for this user (and confirm various bits of biographical information which you can largely ignore).
+
+> **Tip:** Once you've created a user, you can log into their account on the VM directly via SSH, e.g. `sudo gcloud compute ssh elvis@rstudio --zone us-west1-a`
 
 ### Navigate to your RStudio Server instance in your browser
 
@@ -152,9 +162,9 @@ Stopping and (re)starting your VM instance is very simple, so you don't have to 
 
 Again: Easy!
 
-## Bonus: Getting the most out of your Compute Engine + RStudio Server setup
+In one sense, this tutorial could end right now. You have successfully installed all the programs and components that you'll need for high-performance statistical analysis and computing. Your VM will be ready to go with RStudio Server whenever you want it. However, there are still a few more tweaks and tips that we can use to really improve our user experience and reduce complications when interacting with these VMs from our local computers. The rest of this tutorial covers my main tips and recommendations.
 
-Once you've completed the installation steps above, your VM will be ready to go with RStudio Server whenever you want it. However, there are several additional things that you can do to really improve the user experience and reduce complications when interacting with your VM from your local computer. Here are my primary tips and recommendations:
+## Bonus: Getting the most out of your Compute Engine + RStudio Server setup
 
 ### Transferring and syncing files between your VM and your local computer
 
